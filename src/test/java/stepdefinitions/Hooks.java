@@ -81,14 +81,20 @@ public class Hooks extends BaseTest {
             test.log(Status.PASS,
                     MarkupHelper.createLabel("SCENARIO PASSED: " + scenario.getName(), ExtentColor.GREEN));
             System.out.println(" Test PASSED: " + scenario.getName());
+            if (getDriver() != null) {
+                try {
+                    String screenshotPath = takeScreenshot(scenario.getName());
+                    test.addScreenCaptureFromPath(screenshotPath, "Success Screenshot");
+                } catch (Exception e) {
+                    test.warning("Failed to capture screenshot: " + e.getMessage());
+                }
+            }
         }
 
         System.out.println("=".repeat(80) + "\n");
         closeDriver();
         extentTest.remove();
     }
-
-
 
     @AfterStep
     public void afterStep(Scenario scenario) {
