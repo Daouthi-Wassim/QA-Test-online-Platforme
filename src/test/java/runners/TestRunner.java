@@ -15,7 +15,7 @@ import org.junit.runner.RunWith;
                 "src/test/resources/features/07_DeleteAccount.feature"
 }, glue = { "stepdefinitions" }, plugin = {
                 "pretty",
-                "html:target/cucumber-reports/cucumber.html"
+                "html: target/extent-report/report.html"
 }, monochrome = true, dryRun = false)
 public class TestRunner {
 }
