@@ -1,55 +1,101 @@
 package base;
 
+import io.github.bonigarcia.wdm.WebDriverManager;
+import org.apache.commons.io.FileUtils;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.openqa.selenium.OutputType;
+import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
-import org.openqa.selenium.chrome.ChromeOptions;
-import io.github.bonigarcia.wdm.WebDriverManager;
+import org.openqa.selenium.support.ui.WebDriverWait;
+
+import java.io.File;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.time.Duration;
+import java.util.Date;
 
 public class BaseTest {
+
     private static WebDriver driver;
+    private static WebDriverWait wait;
 
-    public static void setup() {
-        WebDriverManager.chromedriver().setup();
-        ChromeOptions options = new ChromeOptions();
-        options.addArguments("--remote-allow-origins=*");
-        options.addArguments("--no-sandbox");
-        options.addArguments("--disable-dev-shm-usage");
-        options.addArguments("--start-maximized");
-        options.addArguments("--disable-notifications");
-        options.addArguments("--disable-popup-blocking");
-        options.addArguments("--disable-gpu");
-        options.addArguments("--disable-extensions");
-        options.addArguments("--disable-software-rasterizer");
-
-        driver = new ChromeDriver(options);
-        driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(10));
-        driver.manage().timeouts().pageLoadTimeout(Duration.ofSeconds(30));
-        driver.manage().timeouts().scriptTimeout(Duration.ofSeconds(30));
-
-        // Ouvrir la page d'accueil
-        System.out.println("Opening automationexercise.com...");
-        driver.get("https://automationexercise.com");
-
-        // Attendre que la page soit chargée
-        try {
-            Thread.sleep(3000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
-        System.out.println("Page loaded: " + driver.getCurrentUrl());
-        System.out.println("Page title: " + driver.getTitle());
-    }
-
-    public static void tearDown() {
-        if (driver != null) {
-            System.out.println("Closing browser...");
-            driver.quit();
+    public static void initializeDriver() {
+        if (driver == null) {
+            WebDriverManager.chromedriver().setup();
+            driver = new ChromeDriver();
+            driver.manage().window().maximize();
+            wait = new WebDriverWait(driver, Duration.ofSeconds(10));
         }
     }
 
     public static WebDriver getDriver() {
+        if (driver == null) {
+            initializeDriver();
+        }
         return driver;
+    }
+
+    public static WebDriverWait getWait() {
+        if (wait == null && driver != null) {
+            wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+        }
+        return wait;
+    }
+
+    public static void closeDriver() {
+        if (driver != null) {
+            driver.quit();
+            driver = null;
+            wait = null;
+        }
+    }
+
+    public static String captureScreenshot(String scenarioName) {
+        WebDriver currentDriver = getDriver();
+        if (currentDriver == null) {
+            System.err.println("Driver non initialisé, impossible de capturer le screenshot");
+            return "";
+        }
+
+        try {
+            File screenshotsDir = new File("target/screenshots");
+            if (!screenshotsDir.exists()) {
+                screenshotsDir.mkdirs();
+            }
+
+            String timeStamp = new SimpleDateFormat("yyyyMMdd-HHmmss").format(new Date());
+
+            String fileName = scenarioName.replaceAll("[^a-zA-Z0-9_-]", "_") + "_" + timeStamp + ".png";
+            File screenshotFile = new File(screenshotsDir, fileName);
+
+            TakesScreenshot ts = (TakesScreenshot) currentDriver;
+            byte[] screenshotBytes = ts.getScreenshotAs(OutputType.BYTES);
+
+            FileUtils.writeByteArrayToFile(screenshotFile, screenshotBytes);
+
+            String absolutePath = screenshotFile.getAbsolutePath();
+            System.out.println("Screenshot enregistré: " + absolutePath);
+
+            return absolutePath;
+
+        } catch (IOException e) {
+            System.err.println("Erreur lors de la capture d'écran: " + e.getMessage());
+            return "";
+        }
+    }
+
+
+
+
+    @BeforeEach
+    void setupTest(){
+        initializeDriver();
+    }
+
+    @AfterEach
+    void teardownTest(){
+        closeDriver();
     }
 }

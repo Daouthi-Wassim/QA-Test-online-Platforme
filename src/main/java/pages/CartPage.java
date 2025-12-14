@@ -5,9 +5,13 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import java.util.List;
 
+/**
+ * CartPage - Handles cart and checkout operations
+ * Integrated CheckoutPage functionality
+ */
 public class CartPage extends BasePage {
 
-    // Locators
+    // Cart locators
     private By cartItems = By.xpath("//table[@id='cart_info_table']//tbody/tr");
     private By deleteButtons = By.cssSelector("a.cart_quantity_delete");
     private By emptyCartMessage = By.id("empty_cart");
@@ -15,6 +19,10 @@ public class CartPage extends BasePage {
     private By quantityInputs = By.cssSelector("input.cart_quantity_input");
     private By cartTotal = By.cssSelector("td.cart_total");
     private By productName = By.cssSelector("td.cart_description h4 a");
+
+    // Checkout locators (from CheckoutPage)
+    private By placeOrderButton = By.xpath("//a[contains(text(),'Place Order')]");
+    private By addressDetails = By.cssSelector(".address_details");
 
     public CartPage(WebDriver driver) {
         super(driver);
@@ -47,6 +55,39 @@ public class CartPage extends BasePage {
 
     public void proceedToCheckout() {
         clickElement(proceedToCheckoutButton);
+        try {
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    // ========== Checkout Methods (from CheckoutPage) ==========
+
+    public boolean isCheckoutPageDisplayed() {
+        return driver.getCurrentUrl().contains("checkout") ||
+                isElementDisplayed(addressDetails);
+    }
+
+    public void clickPlaceOrder() {
+        try {
+            Thread.sleep(2000);
+            if (isElementDisplayed(placeOrderButton)) {
+                scrollToElement(placeOrderButton);
+                Thread.sleep(500);
+                clickElement(placeOrderButton);
+                Thread.sleep(2000);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void proceedToPayment() {
+        proceedToCheckout();
+        if (isCheckoutPageDisplayed()) {
+            clickPlaceOrder();
+        }
     }
 
     public void updateQuantity(int itemIndex, String quantity) {

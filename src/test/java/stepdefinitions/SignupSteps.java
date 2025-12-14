@@ -1,107 +1,97 @@
 package stepdefinitions;
 
 import base.BaseTest;
+import io.cucumber.datatable.DataTable;
 import io.cucumber.java.en.*;
-import pages.*;
-import static org.junit.Assert.*;
+import org.junit.jupiter.api.Assertions;
+import pages.SignupPage;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
+import java.util.Map;
 
-public class SignupSteps {
+public class SignupSteps extends BaseTest {
 
-    private HomePage homePage;
-    private LoginPage loginPage;
     private SignupPage signupPage;
-    private AccountPage accountPage;
-    private String generatedEmail;
 
-    @Given("I am on the homepage")
-    public void i_am_on_the_homepage() {
-        homePage = new HomePage(BaseTest.getDriver());
-        assertTrue("Homepage should be loaded", BaseTest.getDriver().getCurrentUrl().contains("automationexercise.com"));
+    public SignupSteps() {
+        signupPage = new SignupPage(getDriver());
     }
 
-    @When("I click on Signup \\/ Login button")
-    public void i_click_on_signup_login_button() {
-        homePage.clickLogin();
-        loginPage = new LoginPage(BaseTest.getDriver());
-        try { Thread.sleep(2000); } catch (InterruptedException e) { e.printStackTrace(); }
-        assertTrue("Login page should be loaded", loginPage.isLoginPageLoaded());
+    @Given("I am on the signup page")
+    public void iAmOnTheSignupPage() {
+        signupPage.openSignupPage();
+        Assertions.assertTrue(signupPage.isSignupPageDisplayed(), "Signup page should be displayed");
     }
 
-    @When("I enter signup name {string} and unique email")
-    public void i_enter_signup_name_and_unique_email(String name) {
-        // Générer un email unique
-        String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmssSSS"));
-        generatedEmail = "testuser_" + timestamp + "@example.com";
-
-        System.out.println("Generated email: " + generatedEmail);
-        loginPage.enterSignupName(name);
-        loginPage.enterSignupEmail(generatedEmail);
+    @When("I enter signup name {string} and email {string}")
+    public void iEnterSignupNameAndEmail(String name, String email) {
+        signupPage.enterSignupDetails(name, email);
     }
 
-    @When("I click signup button")
-    public void i_click_signup_button() {
-        loginPage.clickSignupButton();
-        try { Thread.sleep(3000); } catch (InterruptedException e) { e.printStackTrace(); }
+    @When("I click the signup button")
+    public void iClickTheSignupButton() {
+        signupPage.clickSignupButton();
     }
 
-    @Then("I should be redirected to account creation page")
-    public void i_should_be_redirected_to_account_creation_page() {
-        signupPage = new SignupPage(BaseTest.getDriver());
-        assertTrue("Should be on account creation page", signupPage.isAccountCreationPageLoaded());
+    @Then("I should be redirected to the account creation page")
+    public void iShouldBeRedirectedToTheAccountCreationPage() {
+        Assertions.assertTrue(signupPage.isAccountCreationPageLoaded(),
+                "Account creation page should be loaded");
     }
 
-    @When("I complete account creation with password {string}")
-    public void i_complete_account_creation_with_password(String password) {
-        // Remplir le formulaire de création de compte
-        signupPage.selectTitle("Mr");
-        signupPage.enterPassword(password);
-        signupPage.selectDateOfBirth("1", "1", "1990");
-        signupPage.checkNewsletter();
-        signupPage.checkSpecialOffers();
+    @When("I fill in the account details:")
+    public void iFillInTheAccountDetails(DataTable dataTable) {
+        Map<String, String> data = dataTable.asMap(String.class, String.class);
 
-        // Informations d'adresse
-        signupPage.enterFirstName("John");
-        signupPage.enterLastName("Doe");
-        signupPage.enterCompany("Test Company");
-        signupPage.enterAddress1("123 Test Street");
-        signupPage.enterAddress2("Apt 4B");
-        signupPage.selectCountry("United States");
-        signupPage.enterState("California");
-        signupPage.enterCity("Los Angeles");
-        signupPage.enterZipcode("90001");
-        signupPage.enterMobileNumber("1234567890");
+        signupPage.selectTitle(data.get("title"));
+        signupPage.enterPassword(data.get("password"));
+        signupPage.selectDateOfBirth(data.get("day"), data.get("month"), data.get("year"));
+        signupPage.enterFirstName(data.get("firstName"));
+        signupPage.enterLastName(data.get("lastName"));
+        signupPage.enterCompany(data.get("company"));
+        signupPage.enterAddress1(data.get("address1"));
+        signupPage.enterCity(data.get("city"));
+        signupPage.selectCountry(data.get("country"));
+        signupPage.enterState(data.get("state"));
+        signupPage.enterZipcode(data.get("zipcode"));
+        signupPage.enterMobileNumber(data.get("mobile"));
+    }
 
-        // Cliquer sur créer le compte
+    @When("I click create account")
+    public void iClickCreateAccount() {
         signupPage.clickCreateAccount();
-        try { Thread.sleep(3000); } catch (InterruptedException e) { e.printStackTrace(); }
     }
 
-    @When("I click continue button")
-    public void i_click_continue_button() {
-        accountPage = new AccountPage(BaseTest.getDriver());
-        accountPage.clickContinue();
-        try { Thread.sleep(2000); } catch (InterruptedException e) { e.printStackTrace(); }
+    @Then("I should see account created message")
+    public void iShouldSeeAccountCreatedMessage() {
+        Assertions.assertTrue(signupPage.isAccountCreated(),
+                "Account created message should be displayed");
     }
 
-    @Then("I should be logged in successfully")
-    public void i_should_be_logged_in_successfully() {
-        homePage = new HomePage(BaseTest.getDriver());
-        assertTrue("User should be logged in", homePage.isUserLoggedIn());
-        System.out.println("User logged in as: " + homePage.getLoggedInUsername());
+    @When("I click continue after account creation")
+    public void iClickContinueAfterAccountCreation() {
+        signupPage.clickContinue();
     }
 
-    @When("I click logout button")
-    public void i_click_logout_button() {
-        homePage.clickLogout();
-        try { Thread.sleep(2000); } catch (InterruptedException e) { e.printStackTrace(); }
+    @Then("I should be logged in as {string}")
+    public void iShouldBeLoggedInAs(String username) {
+        Assertions.assertTrue(signupPage.isUserLoggedIn(), "User should be logged in");
+        String loggedInUser = signupPage.getLoggedInUsername();
+        Assertions.assertTrue(loggedInUser.contains(username),
+                "Username should be " + username + " but was " + loggedInUser);
     }
 
-    @Then("I should be logged out")
-    public void i_should_be_logged_out() {
-        homePage = new HomePage(BaseTest.getDriver());
-        assertFalse("User should be logged out", homePage.isUserLoggedIn());
+    @Then("I should see signup error message {string}")
+    public void iShouldSeeSignupErrorMessage(String expectedMessage) {
+        Assertions.assertTrue(signupPage.isSignupErrorDisplayed(),
+                "Signup error message should be displayed");
+        String actualMessage = signupPage.getSignupErrorMessage();
+        Assertions.assertTrue(actualMessage.contains(expectedMessage),
+                "Error message should contain: " + expectedMessage);
+    }
+
+    @Then("I should remain on the login page")
+    public void iShouldRemainOnTheLoginPage() {
+        Assertions.assertTrue(signupPage.isSignupPageDisplayed(),
+                "Should remain on signup/login page");
     }
 }

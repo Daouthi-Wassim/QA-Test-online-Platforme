@@ -1,9 +1,9 @@
 package pages;
 
 import org.openqa.selenium.By;
+import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
-import org.openqa.selenium.support.ui.Select;
 import java.util.List;
 
 public class ProductsPage extends BasePage {
@@ -35,9 +35,29 @@ public class ProductsPage extends BasePage {
     }
 
     public void addFirstProductToCart() {
-        List<WebElement> products = driver.findElements(addToCartButtons);
-        if (!products.isEmpty()) {
-            products.get(0).click();
+        try {
+            Thread.sleep(1000);
+
+            List<WebElement> products = driver.findElements(addToCartButtons);
+            if (!products.isEmpty()) {
+                WebElement addButton = products.get(0);
+
+                // Scroll to element
+                ((JavascriptExecutor) driver)
+                        .executeScript("arguments[0].scrollIntoView({block: 'center'});", addButton);
+
+                Thread.sleep(500);
+
+                // Use JavaScript click to avoid ad interception
+                try {
+                    addButton.click();
+                } catch (Exception e) {
+                    ((JavascriptExecutor) driver)
+                            .executeScript("arguments[0].click();", addButton);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
@@ -48,7 +68,7 @@ public class ProductsPage extends BasePage {
                 clickElement(continueShoppingButton);
             }
         } catch (Exception e) {
-            // Ignorer si le bouton n'est pas présent
+            // Ignore if button not present
         }
     }
 
@@ -59,7 +79,7 @@ public class ProductsPage extends BasePage {
                 clickElement(viewCartButton);
             }
         } catch (Exception e) {
-            // Ignorer si le bouton n'est pas présent
+            // Ignore if button not present
         }
     }
 

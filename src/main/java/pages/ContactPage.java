@@ -59,4 +59,26 @@ public class ContactPage extends BasePage {
     public boolean isPageLoaded() {
         return isElementDisplayed(contactTitle);
     }
+
+    // Validation checking methods
+    public boolean isMessageRequired() {
+        try {
+            String required = driver.findElement(messageTextarea).getAttribute("required");
+            return required != null;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public boolean isContactPageStillDisplayed() {
+        return isElementDisplayed(submitButton) && isElementDisplayed(messageTextarea);
+    }
+
+    public String getMessageValidationMessage() {
+        try {
+            return driver.findElement(messageTextarea).getAttribute("validationMessage");
+        } catch (Exception e) {
+            return "";
+        }
+    }
 }
